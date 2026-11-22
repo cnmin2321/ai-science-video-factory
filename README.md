@@ -1,0 +1,3 @@
+# AI Science Video Factory
+
+Initializing...
