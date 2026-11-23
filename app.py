@@ -240,6 +240,93 @@ def fallback_script(profile: dict[str, Any]) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# 任意主题：通用解释模板（无事实库时使用，明确标记未核查）
+# ---------------------------------------------------------------------------
+
+GENERIC_SYSTEM_PROMPT = """你是一位中文科普视频编剧。用户没有提供事实清单，你要写的是“通用解释框架”，不是具体事实报道。
+不要编造具体年份、数字、人名、论文名、公司名或“研究表明”。可以解释概念、机制、常见误解、影响和判断方法。
+每个分镜 narration 35-60 个汉字；claim_ids 留空数组；diagram 只能从 hook, definition, timeline, comparison, summary 中选。
+总旁白 400-520 个汉字。只输出合法 JSON，不要 Markdown，不要解释。
+"""
+
+
+def make_generic_profile(topic: str, facts_text: str = "") -> dict[str, Any]:
+    facts = [x.strip() for x in (facts_text or "").splitlines() if len(x.strip()) >= 6][:8]
+    claims = [
+        {"id": f"U{i + 1}", "text": fact, "source_ids": ["USER"], "risk": "unknown", "status": "unverified"}
+        for i, fact in enumerate(facts)
+    ]
+    sources = []
+    if facts:
+        sources.append({"id": "USER", "title": "用户提供的材料（未独立核验）", "year": datetime.now().year, "url": ""})
+    return {
+        "topic": topic.strip(),
+        "aliases": [],
+        "series": "OPEN SCIENCE LAB",
+        "visual_subtitle": f"{topic.strip()} · 通用解释",
+        "knowledge_goal": f"用通用框架解释“{topic.strip()}”：定义、背景、机制、误解、影响和判断方法。",
+        "sources": sources,
+        "claims": claims,
+        "unverified": True,
+        "facts": facts,
+    }
+
+
+def generic_script(topic: str, target_duration: int, scene_count: int, profile: dict[str, Any]) -> dict[str, Any]:
+    topic = topic.strip()
+    facts = profile.get("facts", [])
+    rows = [
+        ("先问三个问题", f"“{topic}”听起来很大，其实可以先拆成三个问题：它是什么，为什么现在被讨论，它和普通人有什么关系。", ["是什么", "为什么", "与我何关"], "先拆问题，再下判断，比急着站队更有用。"),
+        ("它到底是什么", f"理解“{topic}”，先看边界：它包含哪些部分，又不包含哪些部分。定义清楚，后面的判断才不会被概念带偏。", ["定义", "边界", "不包含什么"], "先定义，再讨论，能减少一半的无效争论。"),
+        ("为什么会发生", f"任何现象都有条件。“{topic}”背后通常有技术、需求、成本或规则的变化，几股力量一起推着它走到今天。", ["技术", "需求", "成本 / 规则"], "别找单一原因，先看几股力量如何叠加。"),
+        ("关键机制", f"把“{topic}”拆开，会看到输入、过程、结果三个环节。真正决定走向的，往往不是最显眼的那一步，而是中间的约束。", ["输入", "过程", "结果 / 约束"], "看懂约束，比记住结论更有用。"),
+        ("一个常见误解", f"关于“{topic}”，最常见的误解是把它当成单一原因的结果。现实通常更复杂：短期看情绪，长期看结构和成本。", ["单一原因", "短期情绪", "长期结构"], "越像“一句话解释”，越要警惕它省略了什么。"),
+        ("对普通人的影响", f"对普通人来说，“{topic}”的影响不在口号里，而在价格、时间、选择和风险的变化里。先看谁受益，谁承担成本。", ["价格", "时间", "选择 / 风险"], "判断影响，先问收益和成本落在谁身上。"),
+        ("争议与边界", f"“{topic}”不是没有争议。有人说它被高估，有人说它被低估；判断时要看证据、样本和利益相关方，而不是只看立场。", ["高估？", "低估？", "证据 / 样本"], "有争议不可怕，可怕的是只看立场不看证据。"),
+        ("怎么判断信息", f"面对“{topic}”的信息，先问三个问题：来源是谁，数据怎么来的，结论有没有被夸大。能回答这三点，才值得继续相信。", ["来源是谁", "数据怎么来", "结论是否夸大"], "信息来源、数据和结论，是三道最基本的过滤器。"),
+        ("最后一句", f"“{topic}”不会只有一个答案。把它放回具体场景，分清事实、解释和判断，才能做出自己的结论。", ["回到场景", "区分事实/解释", "再做判断"], "通用框架给你地图，具体结论仍要靠证据。"),
+    ]
+    scenes = []
+    for i, (heading, narration, on_screen, takeaway) in enumerate(rows[:max(9, min(10, scene_count))], 1):
+        claim_ids = [f"U{i}"] if i <= len(facts) else []
+        scenes.append({
+            "id": i,
+            "heading": heading,
+            "narration": narration,
+            "on_screen": on_screen,
+            "key_takeaway": takeaway,
+            "diagram": ["definition", "timeline", "comparison", "summary"][i % 4],
+            "keywords": [topic, heading],
+            "claim_ids": claim_ids,
+        })
+    return {
+        "title": f"{topic}：一次讲清楚",
+        "subtitle": "从定义、机制到影响，拆开看",
+        "hook": f"如果你只记住一个结论，可能会错过“{topic}”真正重要的部分。",
+        "knowledge_goal": profile["knowledge_goal"],
+        "target_duration": target_duration,
+        "scenes": scenes,
+        "summary": ["先定义，再讨论", "看机制和约束，不只看结论", "分清事实、解释和判断"],
+        "platform": {"description": f"用通用框架拆解“{topic}”：定义、背景、机制、误解、影响和判断方法。", "hashtags": ["#知识科普", f"#{topic[:12]}"]},
+        "meta": {"source": "generic_template", "model": None, "verified": False, "reason": "通用模板草稿，未使用事实库"},
+    }
+
+
+def generic_user_prompt(topic: str, target_duration: int, scene_count: int) -> str:
+    return f"""主题：{topic}
+目标时长：{target_duration} 秒，竖屏 9:16，普通话科普。
+分镜数量：9-10 个。
+这是通用解释草稿，没有事实清单：
+- 不要编造具体年份、数字、人名、公司名、论文名；
+- 可以写定义、背景、机制、常见误解、对普通人的影响、争议边界、判断方法；
+- 每个分镜 narration 35-60 个汉字，claim_ids 留空数组；
+- diagram 从 hook, definition, timeline, comparison, summary 中选。
+输出 JSON，结构：
+{{"title":"标题","subtitle":"副标题","hook":"开场钩子","knowledge_goal":"知识目标","target_duration":{target_duration},"scenes":[{{"id":1,"heading":"短标题","narration":"35-60字","on_screen":["要点1","要点2"],"key_takeaway":"一句话","diagram":"definition","keywords":["词"],"claim_ids":[]}}],"summary":["总结1","总结2","总结3"],"platform":{{"description":"简介","hashtags":["#知识科普"]}}}}
+"""
+
+
+# ---------------------------------------------------------------------------
 # 通用工具
 # ---------------------------------------------------------------------------
 
@@ -389,7 +476,7 @@ class ScriptError(ValueError):
     pass
 
 
-def validate_script(data: dict[str, Any], profile: dict[str, Any] | None = None) -> dict[str, Any]:
+def validate_script(data: dict[str, Any], profile: dict[str, Any] | None = None, allow_unverified: bool = False) -> dict[str, Any]:
     profile = profile or ACTIVE_PROFILE
     issues: list[str] = []
     if not isinstance(data, dict):
@@ -419,11 +506,17 @@ def validate_script(data: dict[str, Any], profile: dict[str, Any] | None = None)
             issues.append(f"第 {i} 个分镜 diagram 不支持：{s['diagram']}")
         if not isinstance(s.get("on_screen"), list) or not s["on_screen"]:
             issues.append(f"第 {i} 个分镜缺 on_screen")
-        if not isinstance(s.get("claim_ids"), list) or not s["claim_ids"]:
+        if not isinstance(s.get("claim_ids"), list):
+            if allow_unverified:
+                s["claim_ids"] = []
+            else:
+                issues.append(f"第 {i} 个分镜缺 claim_ids")
+        elif not s["claim_ids"] and not allow_unverified:
             issues.append(f"第 {i} 个分镜缺 claim_ids")
-        unknown = [c for c in s.get("claim_ids", []) if c not in known]
-        if unknown:
-            issues.append(f"第 {i} 个分镜引用未知论断：{unknown}")
+        if not allow_unverified:
+            unknown = [c for c in s.get("claim_ids", []) if c not in known]
+            if unknown:
+                issues.append(f"第 {i} 个分镜引用未知论断：{unknown}")
         total += chinese_chars(s["narration"])
     if total < 360:
         issues.append(f"总旁白过短（{total} 个汉字），120 秒视频建议 420-560 字")
@@ -431,7 +524,12 @@ def validate_script(data: dict[str, Any], profile: dict[str, Any] | None = None)
         issues.append(f"总旁白过长（{total} 个汉字）")
     if issues:
         raise ScriptError("；".join(issues))
-    data["meta"] = {"source": "ollama", "model": OLLAMA_MODEL, "generated_at": now_iso(), "chars": total}
+    existing_meta = data.get("meta") if isinstance(data.get("meta"), dict) else {}
+    if existing_meta.get("verified") is False:
+        existing_meta.update({"generated_at": now_iso(), "chars": total})
+        data["meta"] = existing_meta
+    else:
+        data["meta"] = {"source": "ollama", "model": OLLAMA_MODEL, "generated_at": now_iso(), "chars": total}
     return data
 
 
@@ -492,6 +590,20 @@ def user_prompt(topic: str, target_duration: int, scene_count: int, profile: dic
 def generate_script(topic: str, target_duration: int, scene_count: int, prefer_llm: bool = True, profile: dict[str, Any] | None = None) -> tuple[dict[str, Any], str]:
     """返回 (script, mode)。mode 为 ollama / fallback。"""
     profile = profile or ACTIVE_PROFILE
+    if profile.get("unverified"):
+        stt = ollama_status()
+        if prefer_llm and stt["available"] and stt["model_present"]:
+            try:
+                raw = ollama_chat([
+                    {"role": "system", "content": GENERIC_SYSTEM_PROMPT},
+                    {"role": "user", "content": generic_user_prompt(topic, target_duration, scene_count)},
+                ])
+                data = json.loads(strip_fence(raw))
+                data["meta"] = {"source": "ollama_generic", "model": OLLAMA_MODEL, "verified": False, "reason": "通用解释草稿"}
+                return validate_script(data, profile, allow_unverified=True), "ollama_generic"
+            except (json.JSONDecodeError, ScriptError, OllamaError) as exc:
+                st.warning(f"Ollama 通用草稿未通过校验，改用模板：{str(exc)[:240]}")
+        return generic_script(topic, target_duration, scene_count, profile), "generic_template"
     if not prefer_llm:
         data = fallback_script(profile)
         data["meta"]["reason"] = "用户选择离线脚本"
@@ -939,10 +1051,14 @@ def factcheck_payload(profile: dict[str, Any] | None = None) -> dict[str, Any]:
         "sources": profile["sources"],
         "blocked": False,
         "requires_human_review": True,
-        "notes": [
-            "单文件版内置的是已整理的来源映射；自动状态不等于人工读过原文。",
-            "发布前必须人工核对关键事实、字幕、配音和画面。",
-        ],
+        "notes": (
+            ["这是通用解释模板草稿，没有内置事实库；发布前必须补充来源并逐条核对。"]
+            if profile.get("unverified")
+            else [
+                "单文件版内置的是已整理的来源映射；自动状态不等于人工读过原文。",
+                "发布前必须人工核对关键事实、字幕、配音和画面。",
+            ]
+        ),
     }
 
 
@@ -960,7 +1076,10 @@ def sources_markdown(profile: dict[str, Any] | None = None) -> str:
         "|---|---|---|---|",
     ]
     for s in profile["sources"]:
-        lines.append(f"| {s['id']} | {s['title']} | {s['year']} | [{s['url']}]({s['url']}) |")
+        link = f"[{s['url']}]({s['url']})" if s.get("url") else "（用户提供，无链接）"
+        lines.append(f"| {s['id']} | {s['title']} | {s['year']} | {link} |")
+    if not profile["sources"]:
+        lines += ["", "> 这是通用解释模板草稿，没有内置来源。发布前请补充权威来源并逐条核对。", ""]
     lines += ["", "## 逐条论断", ""]
     for c in profile["claims"]:
         refs = "、".join(c["source_ids"])
@@ -1054,7 +1173,9 @@ def init_state() -> None:
 
 init_state()
 
-if st.session_state.get("profile_topic"):
+if st.session_state.get("profile"):
+    ACTIVE_PROFILE = st.session_state.profile
+elif st.session_state.get("profile_topic"):
     _saved_profile = resolve_profile(st.session_state.profile_topic)
     if _saved_profile:
         ACTIVE_PROFILE = _saved_profile
@@ -1087,7 +1208,13 @@ if page == "制作":
     with c1:
         with st.form("generate_form"):
             topic = st.text_input("视频主题", value=ACTIVE_PROFILE["topic"])
-            st.caption("内置主题：为什么 AI 会产生幻觉？ / 科普汽车发展史。其他主题需补充事实库。")
+            st.caption("内置主题：为什么 AI 会产生幻觉？ / 科普汽车发展史。其他主题可走下方通用模式。")
+            facts_input = st.text_area(
+                "补充事实 / 来源（可选，每行一条）",
+                height=80,
+                placeholder="例如：某个年份、某个定义、某个官方数据来源；不填则只生成通用解释框架。",
+            )
+            allow_generic = st.checkbox("任意主题：允许生成未核查草稿", value=True)
             a, b = st.columns(2)
             with a:
                 duration = st.select_slider("目标时长（秒）", options=[60, 90, 120, 150, 180], value=120)
@@ -1099,9 +1226,13 @@ if page == "制作":
         if submitted:
             profile = resolve_profile(topic)
             if profile is None:
-                st.error("当前单文件版内置：《为什么 AI 会产生幻觉？》《科普汽车发展史》。其他主题请先补充事实库，或在本地用 Ollama + 自定义 profile。")
-            else:
+                if not allow_generic:
+                    st.error("这个主题没有内置事实库。勾选“任意主题：允许生成未核查草稿”，或先在代码里补一份 profile。")
+                else:
+                    profile = make_generic_profile(topic, facts_input)
+            if profile is not None:
                 ACTIVE_PROFILE = profile
+                st.session_state.profile = profile
                 st.session_state.profile_topic = profile["topic"]
                 with st.spinner("正在生成脚本（Ollama 可能需要几分钟）..."):
                     script, mode = generate_script(topic, duration, scene_count, prefer_llm, profile)
@@ -1112,7 +1243,15 @@ if page == "制作":
                 st.session_state.video = None
                 st.session_state.bundle = None
                 st.session_state.fact_reviewed = False
-                st.success("脚本已生成：" + ("Ollama" if mode == "ollama" else "内置已核查脚本"))
+                mode_label = {
+                    "ollama": "Ollama",
+                    "fallback": "内置已核查脚本",
+                    "generic_template": "通用解释模板（未核查）",
+                    "ollama_generic": "Ollama 通用草稿（未核查）",
+                }.get(mode, mode)
+                st.success("脚本已生成：" + mode_label)
+                if profile.get("unverified"):
+                    st.warning("这是未核查草稿：没有内置事实库，发布前必须补充权威来源并逐条核对。")
                 if mode == "fallback":
                     st.info("Ollama 不可用或输出未通过校验，已回退到内置脚本；这不会阻止你继续生成分镜。")
                 if auto_build:
@@ -1135,9 +1274,9 @@ if page == "制作":
         st.markdown("#### 这一版保留的核心逻辑")
         st.markdown(
             "- 主题 → 结构化 JSON 脚本\n"
-            "- 分镜绑定 `claim_ids`，不允许自由编造\n"
+            "- 内置主题绑定 `claim_ids`；通用模式明确标记未核查\n"
             "- 真实调用 `/api/chat`、`/api/tags`\n"
-            "- 11 张 1080×1920 程序化信息图\n"
+            "- 9–11 张 1080×1920 程序化信息图\n"
             "- SRT 字幕 + 可选 MP4 合成\n"
             "- 失败自动回退，不中断页面"
         )
@@ -1148,7 +1287,9 @@ elif page == "事实核查":
     hero("事实核查", "先看证据，再看画面；自动状态不等于人工读过原文", "FACT CHECK")
     fact = factcheck_payload()
     st.markdown(f"### {fact['topic']}")
-    st.caption(f"生成时间：{fact['checked_at']} · 内置来源 {len(fact['sources'])} 条 · 论断 {len(fact['claims'])} 条")
+    st.caption(f"生成时间：{fact['checked_at']} · 登记来源 {len(fact['sources'])} 条 · 论断 {len(fact['claims'])} 条")
+    if not fact["claims"]:
+        st.warning("通用解释模板草稿：没有内置事实库。请补充权威来源，逐条核对后再发布。")
     cols = st.columns(3)
     cols[0].metric("高风险论断", sum(1 for c in fact["claims"] if c["risk"] == "high"))
     cols[1].metric("已登记来源", len(fact["sources"]))
@@ -1163,10 +1304,15 @@ elif page == "事实核查":
         }
         for c in fact["claims"]
     ]
-    st.dataframe(rows, use_container_width=True, hide_index=True)
+    if rows:
+        st.dataframe(rows, use_container_width=True, hide_index=True)
     st.markdown("#### 来源清单")
-    for s in fact["sources"]:
-        st.markdown(f"- **{s['id']}** [{s['title']}]({s['url']}) · {s['year']}")
+    if fact["sources"]:
+        for s in fact["sources"]:
+            link = f"[{s['title']}]({s['url']})" if s.get("url") else s["title"]
+            st.markdown(f"- **{s['id']}** {link} · {s['year']}")
+    else:
+        st.info("没有登记来源。通用模式只能生成解释框架，不能当作事实核查通过。")
     st.download_button("下载 fact_check.json", json.dumps(fact, ensure_ascii=False, indent=2).encode("utf-8"), file_name="fact_check.json", mime="application/json")
     st.download_button("下载 sources.md", sources_markdown().encode("utf-8"), file_name="sources.md", mime="text/markdown")
     st.markdown("#### 人工确认")
