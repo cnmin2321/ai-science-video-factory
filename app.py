@@ -715,13 +715,15 @@ def _diagram(d: ImageDraw.ImageDraw, box: tuple[int, int, int, int], scene: dict
         d.text((x + w // 2, y + 210), "检索错 / 文档矛盾 / 忽略证据  →  仍可能幻觉", font=font(26, True), fill=RED, anchor="mm")
         d.text((x + w // 2, y + 265), "RAG 降低风险，不提供“零幻觉”保证。", font=font(23, False), fill=MUTED, anchor="mm")
     elif kind == "summary":
-        items = [("01", "流畅 ≠ 真实", "语言连贯只是概率高", CYAN), ("02", "自信 ≠ 可靠", "语气不能替代证据", AMBER), ("03", "证据 + 人 把关", "高风险场景必须复核", PURPLE)]
-        for i, (num, title, sub, color) in enumerate(items):
+        items = scene.get("on_screen", [])[:3]
+        if not items:
+            items = ["先定义", "看机制", "再判断"]
+        for i, title in enumerate(items):
             yy = y + 10 + i * 120
+            color = [CYAN, AMBER, PURPLE][i % 3]
             d.rounded_rectangle((x + 16, yy, x + w - 16, yy + 102), radius=18, fill=(15, 29, 52), outline=color, width=2)
-            d.text((x + 38, yy + 50), num, font=font(34, True), fill=color, anchor="lm")
-            d.text((x + 100, yy + 32), title, font=font(28, True), fill=WHITE)
-            d.text((x + 100, yy + 68), sub, font=font(20, False), fill=MUTED)
+            d.text((x + 38, yy + 50), f"{i + 1:02d}", font=font(34, True), fill=color, anchor="lm")
+            d.text((x + 100, yy + 50), title, font=fit_font(d, title, w - 140, 28, 18, True), fill=WHITE, anchor="lm")
     elif kind == "hook":
         d.rounded_rectangle((x + 20, y + 10, x + w - 20, y + 230), radius=24, fill=(13, 24, 45), outline=(56, 189, 248, 80), width=2)
         d.text((x + 40, y + 28), "AI 助手 · 对话演示", font=font(22, True), fill=MUTED)
