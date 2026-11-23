@@ -98,6 +98,7 @@ RED = (248, 113, 113)
 ALLOWED_DIAGRAMS = {
     "hook", "definition", "next_token", "plausibility", "data_noise",
     "reward", "snowball", "rag", "uncertainty", "mitigation", "summary",
+    "timeline", "comparison",
 }
 
 
@@ -159,6 +160,83 @@ FALLBACK_SCRIPT: dict[str, Any] = {
     "platform": {"description": "AI 为什么会“一本正经地胡说八道”？用 2 分钟看懂大模型幻觉的机制、局限与应对方法。", "hashtags": ["#AI科普", "#人工智能", "#大模型", "#AI幻觉"]},
     "meta": {"source": "builtin_fallback", "model": None, "reason": "Ollama unavailable or validation failed"},
 }
+
+
+# ---------------------------------------------------------------------------
+# 第二个内置事实库：汽车发展史（可继续扩展更多 topic profile）
+# ---------------------------------------------------------------------------
+
+AUTO_PROFILE: dict[str, Any] = {
+    "topic": "科普汽车发展史",
+    "aliases": ["汽车发展史", "汽车史", "汽车的历史", "汽车是怎么发明的"],
+    "series": "MOBILITY SCIENCE LAB",
+    "visual_subtitle": "汽车发展史 · 科学解释",
+    "knowledge_goal": "按时间线解释汽车从 1886 年诞生、福特流水线、安全与排放法规、混合动力到电动化与智能驾驶的关键变化。",
+    "sources": [
+        {"id": "S1", "title": "History of the automobile", "year": 2024, "url": "https://en.wikipedia.org/wiki/History_of_the_automobile"},
+        {"id": "S2", "title": "Benz Patent-Motorwagen", "year": 2024, "url": "https://en.wikipedia.org/wiki/Benz_Patent-Motorwagen"},
+        {"id": "S3", "title": "Ford Model T", "year": 2024, "url": "https://en.wikipedia.org/wiki/Ford_Model_T"},
+        {"id": "S4", "title": "Assembly line", "year": 2024, "url": "https://en.wikipedia.org/wiki/Assembly_line"},
+        {"id": "S5", "title": "Seat belt", "year": 2024, "url": "https://en.wikipedia.org/wiki/Seat_belt"},
+        {"id": "S6", "title": "Catalytic converter", "year": 2024, "url": "https://en.wikipedia.org/wiki/Catalytic_converter"},
+        {"id": "S7", "title": "Toyota Prius", "year": 2024, "url": "https://en.wikipedia.org/wiki/Toyota_Prius"},
+        {"id": "S8", "title": "Tesla Model S", "year": 2024, "url": "https://en.wikipedia.org/wiki/Tesla_Model_S"},
+        {"id": "S9", "title": "Global EV Outlook 2024", "year": 2024, "url": "https://www.iea.org/reports/global-ev-outlook-2024"},
+        {"id": "S10", "title": "Advanced driver-assistance system", "year": 2024, "url": "https://en.wikipedia.org/wiki/Advanced_driver-assistance_system"},
+    ],
+    "claims": [
+        {"id": "C1", "text": "1886 年卡尔·本茨的 Benz Patent-Motorwagen 被广泛认为是第一辆实用的内燃机汽车，采用三轮、后置单缸发动机。", "source_ids": ["S1", "S2"], "risk": "high", "status": "supported"},
+        {"id": "C2", "text": "1908 年福特 Model T 让汽车从昂贵手工产品走向大众；1913 年移动流水线进一步降低了装配时间和成本。", "source_ids": ["S3", "S4"], "risk": "high", "status": "supported"},
+        {"id": "C3", "text": "20 世纪上半叶，封闭车身、电启动、道路网络和加油站逐步普及，汽车从实验机器变成日常交通工具。", "source_ids": ["S1"], "risk": "medium", "status": "supported"},
+        {"id": "C4", "text": "二战后高速公路和郊区扩张推动了汽车普及，也带来拥堵、事故和城市形态变化。", "source_ids": ["S1"], "risk": "medium", "status": "supported"},
+        {"id": "C5", "text": "1959 年沃尔沃把三点式安全带推向市场，随后安全带法规和碰撞测试成为汽车安全的重要 baseline。", "source_ids": ["S5"], "risk": "medium", "status": "supported"},
+        {"id": "C6", "text": "1970 年代石油危机和排放法规推动燃油喷射、轻量化、催化转化器和无铅汽油普及。", "source_ids": ["S6"], "risk": "medium", "status": "supported"},
+        {"id": "C7", "text": "1980-90 年代电子控制单元、ABS、安全气囊和车身碰撞结构逐步成为主流配置。", "source_ids": ["S1"], "risk": "medium", "status": "supported"},
+        {"id": "C8", "text": "1997 年丰田 Prius 成为首款大规模量产的混合动力车，用电机回收制动能量并降低油耗。", "source_ids": ["S7"], "risk": "medium", "status": "supported"},
+        {"id": "C9", "text": "2000 年代后锂离子电池成本下降，特斯拉 Roadster（2008）和 Model S（2012）推动电动车从 niche 走向主流。", "source_ids": ["S8", "S9"], "risk": "medium", "status": "supported"},
+        {"id": "C10", "text": "2020 年代电动车销量快速增长，但充电网络、电池成本、电网和软件安全仍是普及的关键约束；ADAS 仍以辅助驾驶为主。", "source_ids": ["S9", "S10"], "risk": "high", "status": "supported"},
+    ],
+}
+
+AUTO_FALLBACK_SCRIPT: dict[str, Any] = {
+    "title": "汽车发展史：从三轮车到软件定义汽车",
+    "subtitle": "140 年，汽车如何变成今天的样子",
+    "hook": "1886 年，一辆只有三个轮子、不到一马力的车，改变了人类的出行方式。",
+    "knowledge_goal": AUTO_PROFILE["knowledge_goal"],
+    "target_duration": 120,
+    "scenes": [
+        {"id": 1, "heading": "三个轮子的起点", "narration": "1886 年，卡尔·本茨造出 Benz Patent-Motorwagen。它只有三个轮子，后置单缸发动机，速度不快，却被视为第一辆实用的内燃机汽车。", "on_screen": ["1886", "Benz Patent-Motorwagen", "三轮 · 单缸"], "key_takeaway": "汽车不是突然出现的，它从一辆实验三轮车开始。", "diagram": "timeline", "keywords": ["1886", "本茨", "内燃机"], "claim_ids": ["C1"]},
+        {"id": 2, "heading": "福特让汽车变便宜", "narration": "1908 年，福特 Model T 把汽车从手工奢侈品变成大众产品。1913 年移动流水线投入使用，装配时间和成本大幅下降。", "on_screen": ["1908 Model T", "1913 流水线", "从手工到量产"], "key_takeaway": "流水线不是小改进，它改变了汽车的价格和普及速度。", "diagram": "timeline", "keywords": ["福特", "Model T", "流水线"], "claim_ids": ["C2"]},
+        {"id": 3, "heading": "从机器变成日常工具", "narration": "封闭车身、电启动、道路和加油站逐渐普及。汽车不再只是机械爱好者的玩具，而成为普通人通勤、购物和旅行的工具。", "on_screen": ["封闭车身", "电启动", "道路 + 加油站"], "key_takeaway": "汽车普及，靠的不只是发动机，还有整套基础设施。", "diagram": "definition", "keywords": ["电启动", "道路", "通勤"], "claim_ids": ["C3"]},
+        {"id": 4, "heading": "高速公路与郊区", "narration": "二战后，高速公路和郊区扩张把汽车推成生活中心。它带来自由和效率，也带来拥堵、事故和城市形态的改变。", "on_screen": ["高速公路", "郊区化", "自由与代价"], "key_takeaway": "汽车重塑了城市，也制造了新的城市问题。", "diagram": "definition", "keywords": ["高速公路", "郊区", "拥堵"], "claim_ids": ["C4"]},
+        {"id": 5, "heading": "安全带成为底线", "narration": "1959 年，沃尔沃把三点式安全带推向市场。此后安全带法规、碰撞测试和安全车身，让“安全”从卖点变成汽车的基本底线。", "on_screen": ["1959 三点式安全带", "碰撞测试", "安全法规"], "key_takeaway": "安全不是配置表上的一行字，而是几十年事故换来的标准。", "diagram": "timeline", "keywords": ["安全带", "沃尔沃", "碰撞测试"], "claim_ids": ["C5"]},
+        {"id": 6, "heading": "石油危机逼出效率", "narration": "1970 年代石油危机和排放法规，逼着汽车提高效率、减少污染。燃油喷射、轻量化、催化转化器和无铅汽油逐步普及。", "on_screen": ["石油危机", "排放法规", "催化转化器"], "key_takeaway": "油价和法规，往往比工程师的偏好更能改变汽车。", "diagram": "definition", "keywords": ["石油危机", "排放", "催化转化器"], "claim_ids": ["C6"]},
+        {"id": 7, "heading": "电子系统接管汽车", "narration": "1980 到 90 年代，电子控制单元、ABS、安全气囊和碰撞结构进入主流。汽车开始从纯机械产品，变成机电一体的复杂系统。", "on_screen": ["ECU", "ABS", "安全气囊"], "key_takeaway": "汽车的竞争力，开始从发动机扩展到电子和软件。", "diagram": "definition", "keywords": ["ECU", "ABS", "气囊"], "claim_ids": ["C7"]},
+        {"id": 8, "heading": "混动的折中方案", "narration": "1997 年，丰田 Prius 成为首款大规模量产的混合动力车。它用电机回收制动能量，在城市工况下显著降低油耗。", "on_screen": ["1997 Prius", "电机 + 发动机", "能量回收"], "key_takeaway": "混动不是过渡的妥协，而是把浪费的能量捡回来。", "diagram": "timeline", "keywords": ["Prius", "混动", "能量回收"], "claim_ids": ["C8"]},
+        {"id": 9, "heading": "锂电池把电动车推上台", "narration": "2000 年代后，锂离子电池成本持续下降。特斯拉 Roadster 和 Model S 把电动车从边缘产品推向主流视野，续航和性能不再是笑话。", "on_screen": ["锂离子电池", "Roadster 2008", "Model S 2012"], "key_takeaway": "电动车翻身，关键不只是电机，而是电池成本曲线。", "diagram": "timeline", "keywords": ["锂电池", "特斯拉", "续航"], "claim_ids": ["C9"]},
+        {"id": 10, "heading": "软件定义汽车，但别神化", "narration": "2020 年代，电动车销量快速增长，充电网络、电池成本、电网和软件安全成为新约束。ADAS 仍以辅助驾驶为主，离真正的无人驾驶还有距离。", "on_screen": ["电动化", "充电网络", "ADAS 辅助驾驶"], "key_takeaway": "汽车在变聪明，但“辅助”和“自动”之间还有很长的路。", "diagram": "comparison", "keywords": ["电动车", "充电", "ADAS"], "claim_ids": ["C10"]},
+    ],
+    "summary": ["汽车从机械产品变成机电+软件系统", "每次普及都伴随基础设施和法规变化", "电动化与智能化仍有现实约束"],
+    "platform": {"description": "用 2 分钟看懂汽车 140 年的关键转折：流水线、安全带、排放法规、混动、锂电池和 ADAS。", "hashtags": ["#汽车发展史", "#汽车科普", "#电动车", "#知识科普"]},
+    "meta": {"source": "builtin_fallback", "model": None, "reason": "汽车发展史内置已核查脚本"},
+}
+
+TOPIC_PROFILES = [PROFILE, AUTO_PROFILE]
+ACTIVE_PROFILE: dict[str, Any] = PROFILE
+
+
+def resolve_profile(topic: str) -> dict[str, Any] | None:
+    key = normalize(topic)
+    for p in TOPIC_PROFILES:
+        if key in {normalize(x) for x in [p["topic"]] + p.get("aliases", [])}:
+            return p
+    return None
+
+
+def fallback_script(profile: dict[str, Any]) -> dict[str, Any]:
+    if profile.get("topic") == AUTO_PROFILE["topic"]:
+        return json.loads(json.dumps(AUTO_FALLBACK_SCRIPT, ensure_ascii=False))
+    return json.loads(json.dumps(FALLBACK_SCRIPT, ensure_ascii=False))
 
 
 # ---------------------------------------------------------------------------
@@ -311,7 +389,8 @@ class ScriptError(ValueError):
     pass
 
 
-def validate_script(data: dict[str, Any]) -> dict[str, Any]:
+def validate_script(data: dict[str, Any], profile: dict[str, Any] | None = None) -> dict[str, Any]:
+    profile = profile or ACTIVE_PROFILE
     issues: list[str] = []
     if not isinstance(data, dict):
         raise ScriptError("顶层必须是 JSON 对象")
@@ -321,7 +400,7 @@ def validate_script(data: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(scenes, list) or not (9 <= len(scenes) <= 14):
         issues.append("scenes 必须是 9-14 个分镜")
         scenes = scenes if isinstance(scenes, list) else []
-    known = {c["id"] for c in PROFILE["claims"]}
+    known = {c["id"] for c in profile["claims"]}
     total = 0
     for i, s in enumerate(scenes, 1):
         if not isinstance(s, dict):
@@ -367,10 +446,11 @@ diagram 只能填一个值，可选：hook, definition, next_token, plausibility
 """
 
 
-def user_prompt(topic: str, target_duration: int, scene_count: int) -> str:
+def user_prompt(topic: str, target_duration: int, scene_count: int, profile: dict[str, Any] | None = None) -> str:
+    profile = profile or ACTIVE_PROFILE
     facts = [
         {"claim_id": c["id"], "statement": c["text"], "risk": c["risk"]}
-        for c in PROFILE["claims"]
+        for c in profile["claims"]
     ]
     schema = {
         "title": "标题，20 字以内",
@@ -394,7 +474,7 @@ def user_prompt(topic: str, target_duration: int, scene_count: int) -> str:
     return f"""主题：{topic}
 目标时长：{target_duration} 秒，竖屏 9:16，普通话科普。
 分镜数量：{scene_count} 个左右。
-知识目标：{PROFILE.get('knowledge_goal', '')}
+知识目标：{profile.get('knowledge_goal', '')}
 
 【已核查事实清单】
 {json.dumps(facts, ensure_ascii=False, indent=2)}
@@ -409,15 +489,16 @@ def user_prompt(topic: str, target_duration: int, scene_count: int) -> str:
 """
 
 
-def generate_script(topic: str, target_duration: int, scene_count: int, prefer_llm: bool = True) -> tuple[dict[str, Any], str]:
+def generate_script(topic: str, target_duration: int, scene_count: int, prefer_llm: bool = True, profile: dict[str, Any] | None = None) -> tuple[dict[str, Any], str]:
     """返回 (script, mode)。mode 为 ollama / fallback。"""
+    profile = profile or ACTIVE_PROFILE
     if not prefer_llm:
-        data = json.loads(json.dumps(FALLBACK_SCRIPT, ensure_ascii=False))
+        data = fallback_script(profile)
         data["meta"]["reason"] = "用户选择离线脚本"
         return data, "fallback"
     stt = ollama_status()
     if not stt["available"] or not stt["model_present"]:
-        data = json.loads(json.dumps(FALLBACK_SCRIPT, ensure_ascii=False))
+        data = fallback_script(profile)
         data["meta"]["reason"] = "Ollama 不可用或模型未安装"
         return data, "fallback"
     raw = ""
@@ -426,14 +507,14 @@ def generate_script(topic: str, target_duration: int, scene_count: int, prefer_l
         try:
             raw = ollama_chat([
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt(topic, target_duration, scene_count)},
+                {"role": "user", "content": user_prompt(topic, target_duration, scene_count, profile)},
             ])
             data = json.loads(strip_fence(raw))
-            return validate_script(data), "ollama"
+            return validate_script(data, profile), "ollama"
         except (json.JSONDecodeError, ScriptError, OllamaError) as exc:
             last_error = str(exc)
             st.warning(f"Ollama 第 {attempt} 次输出未通过校验：{last_error[:300]}")
-    data = json.loads(json.dumps(FALLBACK_SCRIPT, ensure_ascii=False))
+    data = fallback_script(profile)
     data["meta"]["reason"] = f"Ollama 输出未通过校验：{last_error[:200]}"
     return data, "fallback"
 
@@ -539,6 +620,30 @@ def _diagram(d: ImageDraw.ImageDraw, box: tuple[int, int, int, int], scene: dict
         d.rounded_rectangle((x + 404, y + 156, x + 504, y + 196), radius=8, outline=RED, width=2)
         d.text((x + 454, y + 176), "错误示例", font=font(18, True), fill=RED, anchor="mm")
         d.text((x + 36, y + 270), "流畅和自信，可能是最危险的“正确感”。", font=font(26, True), fill=AMBER)
+    elif kind == "timeline":
+        items = scene.get("on_screen", [])[:4]
+        if not items:
+            items = ["起点", "普及", "安全", "电动化"]
+        cw = (w - 44) // len(items)
+        for i, item in enumerate(items):
+            cx = x + 14 + i * cw
+            color = [CYAN, BLUE, PURPLE, GREEN][i % 4]
+            d.rounded_rectangle((cx + 6, y + 40, cx + cw - 6, y + 190), radius=14, fill=(15, 29, 52), outline=color, width=2)
+            d.text((cx + cw // 2, y + 78), f"{i + 1:02d}", font=font(24, True), fill=color, anchor="mm")
+            fit = fit_font(d, item, cw - 22, 24, 18, True)
+            d.text((cx + cw // 2, y + 138), item, font=fit, fill=WHITE, anchor="mm")
+            if i < len(items) - 1:
+                d.line((cx + cw - 4, y + 115, cx + cw + 4, y + 115), fill=MUTED, width=3)
+        d.text((x + w // 2, y + 245), scene.get("key_takeaway", ""), font=fit_font(d, scene.get("key_takeaway", ""), w - 40, 26, 20, True), fill=AMBER, anchor="mm")
+    elif kind == "comparison":
+        items = scene.get("on_screen", [])[:2] or ["过去", "现在"]
+        for i, item in enumerate(items):
+            cx = x + 16 + i * (w // 2)
+            color = CYAN if i == 0 else PURPLE
+            d.rounded_rectangle((cx, y + 30, cx + w // 2 - 26, y + 220), radius=16, fill=(15, 29, 52), outline=color, width=2)
+            d.text((cx + (w // 2 - 26) // 2, y + 90), item, font=fit_font(d, item, w // 2 - 60, 30, 20, True), fill=WHITE, anchor="mm")
+            d.text((cx + (w // 2 - 26) // 2, y + 155), "vs" if i == 0 else "", font=font(22, True), fill=MUTED, anchor="mm")
+        d.text((x + w // 2, y + 270), scene.get("key_takeaway", ""), font=fit_font(d, scene.get("key_takeaway", ""), w - 40, 26, 20, True), fill=AMBER, anchor="mm")
     else:
         # 通用定义卡 / 因果卡
         cards = scene.get("on_screen", [])[:3]
@@ -546,14 +651,15 @@ def _diagram(d: ImageDraw.ImageDraw, box: tuple[int, int, int, int], scene: dict
         for i, item in enumerate(cards):
             cx = x + 16 + i * (cw + 16)
             d.rounded_rectangle((cx, y + 20, cx + cw, y + 210), radius=18, fill=(15, 29, 52), outline=(56, 189, 248, 70), width=2)
-            d.text((cx + cw // 2, y + 105), item, font=font(24, True), fill=WHITE, anchor="mm")
-        d.text((x + w // 2, y + 300), "判断标准：有没有可靠证据", font=font(32, True), fill=CYAN, anchor="mm")
+            d.text((cx + cw // 2, y + 105), item, font=fit_font(d, item, cw - 20, 24, 18, True), fill=WHITE, anchor="mm")
+        d.text((x + w // 2, y + 300), scene.get("key_takeaway", "判断标准：有没有可靠证据"), font=fit_font(d, scene.get("key_takeaway", "判断标准：有没有可靠证据"), w - 40, 32, 20, True), fill=CYAN, anchor="mm")
 
 
-def render_scene(scene: dict[str, Any], index: int, total: int, out: Path) -> Path:
+def render_scene(scene: dict[str, Any], index: int, total: int, out: Path, profile: dict[str, Any] | None = None) -> Path:
+    profile = profile or ACTIVE_PROFILE
     img = _background(1000 + index)
     d = ImageDraw.Draw(img)
-    d.text((64, 96), "AI  SCIENCE  LAB", font=font(22, True), fill=CYAN)
+    d.text((64, 96), profile.get("series", "AI  SCIENCE  LAB"), font=font(22, True), fill=CYAN)
     d.text((W - 64, 96), f"EP 01   /   {index:02d} OF {total:02d}", font=font(19, True), fill=MUTED, anchor="ra")
     d.rounded_rectangle((64, 138, 270, 174), radius=18, fill=(34, 211, 238, 22), outline=(34, 211, 238, 70), width=1)
     d.text((82, 156), "本地生成 · 事实核查", font=font(17, True), fill=(190, 220, 235), anchor="lm")
@@ -562,7 +668,7 @@ def render_scene(scene: dict[str, Any], index: int, total: int, out: Path) -> Pa
     tf = fit_font(d, title, 850, 76, 50, True)
     d.text((66, 222), title, font=tf, fill=WHITE)
     d.rounded_rectangle((66, 330, 150, 340), radius=5, fill=CYAN)
-    d.text((166, 320), "大模型幻觉 · 科学解释", font=font(22, False), fill=MUTED)
+    d.text((166, 320), profile.get("visual_subtitle", "大模型幻觉 · 科学解释"), font=font(22, False), fill=MUTED)
 
     panel = (60, 386, W - 60, 1150)
     _panel(img, panel)
@@ -778,12 +884,12 @@ def estimate_durations(scenes: list[dict[str, Any]]) -> list[float]:
     return [max(6.0, len(s.get("narration", "")) / 4.2 + 1.0) for s in scenes]
 
 
-def build_storyboard(script: dict[str, Any]) -> tuple[list[str], list[float]]:
+def build_storyboard(script: dict[str, Any], profile: dict[str, Any] | None = None) -> tuple[list[str], list[float]]:
     scenes = script.get("scenes", [])
     out_dir = APP_DIR / "scenes"
     images: list[str] = []
     for i, scene in enumerate(scenes, 1):
-        images.append(str(render_scene(scene, i, len(scenes), out_dir / f"scene_{i:02d}.png")))
+        images.append(str(render_scene(scene, i, len(scenes), out_dir / f"scene_{i:02d}.png", profile)))
     return images, estimate_durations(scenes)
 
 
@@ -815,9 +921,10 @@ def build_export_bundle(script: dict[str, Any], images: list[str], durations: li
     }
 
 
-def factcheck_payload() -> dict[str, Any]:
+def factcheck_payload(profile: dict[str, Any] | None = None) -> dict[str, Any]:
+    profile = profile or ACTIVE_PROFILE
     return {
-        "topic": PROFILE["topic"],
+        "topic": profile["topic"],
         "checked_at": now_iso(),
         "claims": [
             {
@@ -827,9 +934,9 @@ def factcheck_payload() -> dict[str, Any]:
                 "source_ids": c["source_ids"],
                 "verification_status": "supported" if c.get("status") == "supported" else "needs_review",
             }
-            for c in PROFILE["claims"]
+            for c in profile["claims"]
         ],
-        "sources": PROFILE["sources"],
+        "sources": profile["sources"],
         "blocked": False,
         "requires_human_review": True,
         "notes": [
@@ -839,9 +946,10 @@ def factcheck_payload() -> dict[str, Any]:
     }
 
 
-def sources_markdown() -> str:
+def sources_markdown(profile: dict[str, Any] | None = None) -> str:
+    profile = profile or ACTIVE_PROFILE
     lines = [
-        f"# 参考资料与事实核查：{PROFILE['topic']}",
+        f"# 参考资料与事实核查：{profile['topic']}",
         "",
         f"- 生成时间：{now_iso()}",
         "- 说明：以下为单文件版内置的已整理来源映射，**不替代人工阅读原文**。",
@@ -851,10 +959,10 @@ def sources_markdown() -> str:
         "| ID | 来源 | 年份 | 链接 |",
         "|---|---|---|---|",
     ]
-    for s in PROFILE["sources"]:
+    for s in profile["sources"]:
         lines.append(f"| {s['id']} | {s['title']} | {s['year']} | [{s['url']}]({s['url']}) |")
     lines += ["", "## 逐条论断", ""]
-    for c in PROFILE["claims"]:
+    for c in profile["claims"]:
         refs = "、".join(c["source_ids"])
         lines += [f"### {c['id']}（{c['risk']}）", "", c["text"], "", f"来源：{refs}", ""]
     lines += [
@@ -946,6 +1054,11 @@ def init_state() -> None:
 
 init_state()
 
+if st.session_state.get("profile_topic"):
+    _saved_profile = resolve_profile(st.session_state.profile_topic)
+    if _saved_profile:
+        ACTIVE_PROFILE = _saved_profile
+
 with st.sidebar:
     st.markdown(
         '<div style="font-size:22px;font-weight:800;">🎬 AI 科普视频工厂</div>'
@@ -973,7 +1086,8 @@ if page == "制作":
     c1, c2 = st.columns([1.15, 0.85], gap="large")
     with c1:
         with st.form("generate_form"):
-            topic = st.text_input("视频主题", value=PROFILE["topic"])
+            topic = st.text_input("视频主题", value=ACTIVE_PROFILE["topic"])
+            st.caption("内置主题：为什么 AI 会产生幻觉？ / 科普汽车发展史。其他主题需补充事实库。")
             a, b = st.columns(2)
             with a:
                 duration = st.select_slider("目标时长（秒）", options=[60, 90, 120, 150, 180], value=120)
@@ -983,23 +1097,27 @@ if page == "制作":
                 auto_build = st.checkbox("生成脚本后自动做分镜/字幕/视频", value=True)
             submitted = st.form_submit_button("一键生成脚本与视频素材", type="primary", use_container_width=True)
         if submitted:
-            if normalize(topic) not in {normalize(x) for x in [PROFILE["topic"]] + PROFILE["aliases"]}:
-                st.error("当前单文件版只内置了《为什么 AI 会产生幻觉？》的已核查事实库。其他主题请先补充事实库，或只使用内置主题。")
+            profile = resolve_profile(topic)
+            if profile is None:
+                st.error("当前单文件版内置：《为什么 AI 会产生幻觉？》《科普汽车发展史》。其他主题请先补充事实库，或在本地用 Ollama + 自定义 profile。")
             else:
+                ACTIVE_PROFILE = profile
+                st.session_state.profile_topic = profile["topic"]
                 with st.spinner("正在生成脚本（Ollama 可能需要几分钟）..."):
-                    script, mode = generate_script(topic, duration, scene_count, prefer_llm)
+                    script, mode = generate_script(topic, duration, scene_count, prefer_llm, profile)
                 st.session_state.script = script
                 st.session_state.mode = mode
                 st.session_state.images = []
                 st.session_state.audio = None
                 st.session_state.video = None
                 st.session_state.bundle = None
+                st.session_state.fact_reviewed = False
                 st.success("脚本已生成：" + ("Ollama" if mode == "ollama" else "内置已核查脚本"))
                 if mode == "fallback":
                     st.info("Ollama 不可用或输出未通过校验，已回退到内置脚本；这不会阻止你继续生成分镜。")
                 if auto_build:
-                    with st.spinner("正在渲染 11 张 1080×1920 分镜..."):
-                        images, durations = build_storyboard(script)
+                    with st.spinner("正在渲染分镜..."):
+                        images, durations = build_storyboard(script, profile)
                     st.session_state.images = images
                     st.session_state.durations = durations
                     with st.spinner("正在生成字幕、配音并尝试合成视频..."):
@@ -1074,7 +1192,7 @@ elif page == "分镜与脚本":
     st.session_state.script = script
     if st.button("重新生成分镜画面", type="primary", use_container_width=True):
         with st.spinner("正在渲染 1080×1920 分镜..."):
-            images, durations = build_storyboard(script)
+            images, durations = build_storyboard(script, ACTIVE_PROFILE)
             st.session_state.images = images
             st.session_state.durations = durations
         st.success(f"已生成 {len(images)} 张分镜")
